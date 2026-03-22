@@ -1,0 +1,65 @@
+name: Build PS Vita VPK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: vitasdk/vitasdk:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          apk add --no-cache cmake samurai zip python3 git 2>/dev/null || true
+          which cmake
+
+      - name: Install vitaGL
+        run: |
+          cd /tmp
+          # Update vita-headers to get latest GXM flags needed by vitaGL
+          git clone --depth 1 https://github.com/vitasdk/vita-headers.git
+          cp -r vita-headers/include/* $VITASDK/arm-vita-eabi/include/
+          # Build and install vitaGL
+          git clone --depth 1 https://github.com/Rinnegatamante/vitaGL.git
+          cd vitaGL && make HAVE_SBRK=1 install -j4
+
+      - name: Install GLM
+        run: |
+          git clone --depth 1 https://github.com/g-truc/glm.git /tmp/glm
+          cp -r /tmp/glm/glm $VITASDK/arm-vita-eabi/include/
+
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -G Ninja
+
+      - name: Build
+        run: cmake --build build --parallel 4
+
+      - name: Upload VPK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HardTime-vita-vpk
+          path: build/HardTime.vpk
+          retention-days: 30
+
+      - name: Create Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/HardTime.vpk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
