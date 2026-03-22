@@ -106,31 +106,51 @@ void VitaAudioEngine::shutdown() {
 VitaSound* VitaAudioEngine::load(const char* path) {
     auto* s = new VitaSound();
     SceUID fd = sceIoOpen(path, SCE_O_RDONLY, 0);
-    if (fd < 0) return s;
+    if (fd < 0) {
+        if (g_debugLog) { fprintf(g_debugLog, "[AUD] open FAIL: %s\n", path); fflush(g_debugLog); }
+        return s;
+    }
     long sz = sceIoLseek(fd, 0, SCE_SEEK_END);
+    if (sz <= 0 || sz > 10*1024*1024) {  // reject files > 10MB or invalid size
+        if (g_debugLog) { fprintf(g_debugLog, "[AUD] bad size %ld: %s\n", sz, path); fflush(g_debugLog); }
+        sceIoClose(fd);
+        return s;
+    }
     sceIoLseek(fd, 0, SCE_SEEK_SET);
-    uint8_t* raw = new uint8_t[sz];
+    uint8_t* raw = (uint8_t*)malloc(sz);
+    if (!raw) {
+        if (g_debugLog) { fprintf(g_debugLog, "[AUD] malloc(%ld) FAIL: %s\n", sz, path); fflush(g_debugLog); }
+        sceIoClose(fd);
+        return s;
+    }
     sceIoRead(fd, raw, sz);
     sceIoClose(fd);
     if (sz >= 44 && memcmp(raw,"RIFF",4)==0 && memcmp(raw+8,"WAVE",4)==0) {
         int off = 12;
         while (off + 8 < sz) {
             uint32_t clen = *(uint32_t*)(raw+off+4);
-            if (memcmp(raw+off,"fmt ",4)==0) {
+            if (clen > (uint32_t)(sz - off - 8)) clen = sz - off - 8;  // clamp to avoid overflow
+            if (memcmp(raw+off,"fmt ",4)==0 && clen >= 16) {
                 s->channels    = *(uint16_t*)(raw+off+10);
                 s->sample_rate = *(uint32_t*)(raw+off+12);
             } else if (memcmp(raw+off,"data",4)==0) {
                 int n = clen / 2;
-                s->samples   = new int16_t[n];
-                s->n_samples = n;
-                memcpy(s->samples, raw+off+8, clen);
-                s->loaded = true;
+                if (n > 0) {
+                    s->samples   = new(std::nothrow) int16_t[n];
+                    if (s->samples) {
+                        s->n_samples = n;
+                        memcpy(s->samples, raw+off+8, clen);
+                        s->loaded = true;
+                    }
+                }
                 break;
             }
             off += 8 + clen;
+            if (off < 0) break;  // overflow protection
         }
     }
-    delete[] raw;
+    free(raw);
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] load %s: sz=%ld loaded=%d\n", path, sz, s->loaded); fflush(g_debugLog); }
     return s;
 }
 
