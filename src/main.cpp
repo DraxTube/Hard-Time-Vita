@@ -17,6 +17,7 @@
 #include "texts.h"
 #include "data.h"
 #include "costume.h"
+#include "debug_log.h"
 
 #include <psp2/kernel/processmgr.h>
 #include <psp2/sysmodule.h>
@@ -70,28 +71,50 @@ static void LoadScreen(int request) {
 //  Program entry
 // ---------------------------------------------------------------------------
 int main() {
+    // Start debug log BEFORE anything else
+    DebugLogInit();
+    DebugLog("[MAIN] Starting Hard Time Vita...");
+
+    DebugLog("[MAIN] Calling InitVita()...");
     InitVita();
+    DebugLog("[MAIN] InitVita() done");
 
     // Mirror original Blitz3D startup sequence
     SeedRnd(MilliSecs());
+    DebugLog("[MAIN] SeedRnd done");
 
     // Initialise game globals
+    DebugLog("[MAIN] Calling InitValues()...");
     InitValues();
+    DebugLog("[MAIN] InitValues() done");
 
     // Load user options from ux0:data/HardTime/Options.dat
+    DebugLog("[MAIN] Calling LoadOptions()...");
     LoadOptions();
+    DebugLog("[MAIN] LoadOptions() done");
 
     // Intro sequence (logo screen)
+    DebugLog("[MAIN] Calling Intro()...");
     Intro();
+    DebugLog("[MAIN] Intro() done");
 
     // Load all shared media
+    DebugLog("[MAIN] Calling LoadImages()...");
     LoadImages();
+    DebugLog("[MAIN] LoadImages() done");
+
+    DebugLog("[MAIN] Calling LoadTextures()...");
     LoadTextures();
+    DebugLog("[MAIN] LoadTextures() done");
+
+    DebugLog("[MAIN] Calling LoadWeaponData()...");
     LoadWeaponData();
+    DebugLog("[MAIN] LoadWeaponData() done");
 
     // --- Main screen loop (mirrors original Repeat/Until loop) ---
     SeedRnd(MilliSecs());
     screen = 1;
+    DebugLog("[MAIN] Entering main loop, screen=%d", screen);
 
     while (screen != 0) {
         // Update controller state
@@ -106,6 +129,8 @@ int main() {
     }
 
     // Shutdown
+    DebugLog("[MAIN] Exiting main loop");
+    DebugLogClose();
     ShutdownAudio();
     sceKernelExitProcess(0);
     return 0;
