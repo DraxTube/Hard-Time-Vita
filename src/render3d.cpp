@@ -6,6 +6,7 @@
 #include "../third_party/ds3_loader.h"
 #include "render3d.h"
 #include "blitz_compat.h"
+#include "debug_log.h"
 #include <vitaGL.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -192,12 +193,18 @@ void MeshColor(Handle h,int r,int g,int b,int a){EntityColor(h,r,g,b);(void)a;}
 void PaintMesh(Handle h,GLuint tex){EntityTexture(h,tex);}
 
 // ---------------------------------------------------------------------------
-//  LoadTexture  (real PNG/BMP/TGA loader via stb_image_vita)
+//  LoadTexture  (real PNG/BMP/TGA/JPG loader via stb_image_vita)
 // ---------------------------------------------------------------------------
 GLuint LoadTexture(const BBString& path, int flags) {
     int w, h, ch;
     unsigned char* data = vita_load_image(path.c_str(), &w, &h, &ch);
-    if (!data) return 0;
+    if (!data) {
+        if (g_debugLog) {
+            fprintf(g_debugLog, "[TEX] FAIL: %s\n", path.c_str());
+            fflush(g_debugLog);
+        }
+        return 0;
+    }
 
     GLuint tex = 0;
     glGenTextures(1, &tex);
@@ -212,6 +219,10 @@ GLuint LoadTexture(const BBString& path, int flags) {
     if (mip) glGenerateMipmap(GL_TEXTURE_2D);
 
     vita_free_image(data);
+    if (g_debugLog) {
+        fprintf(g_debugLog, "[TEX] OK: %s (%dx%d ch=%d tex=%u)\n", path.c_str(), w, h, ch, tex);
+        fflush(g_debugLog);
+    }
     return tex;
 }
 
