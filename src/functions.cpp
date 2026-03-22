@@ -6,6 +6,7 @@
 #include "players.h"
 #include "costume.h"
 #include "world_props.h"
+#include "moves.h"
 #include "render3d.h"
 #include "../third_party/vita_font.h"
 #include <vitaGL.h>
