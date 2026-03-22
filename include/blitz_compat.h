@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include "debug_log.h"
 #include <algorithm>
 #include <memory>
 #include <random>
@@ -205,8 +206,10 @@ namespace BB {
     };
 
     inline BBSound* LoadSound(const BBString& path) {
+        if (g_debugLog) { fprintf(g_debugLog, "[SND] LoadSound: %s\n", path.c_str()); fflush(g_debugLog); }
         auto* s = new BBSound();
         s->data = VitaAudioEngine::get().load(path.c_str());
+        if (g_debugLog) { fprintf(g_debugLog, "[SND] LoadSound OK: %s (loaded=%d)\n", path.c_str(), s->data ? s->data->loaded : -1); fflush(g_debugLog); }
         return s;
     }
     inline BBSound* Load3DSound(const BBString& path) {
