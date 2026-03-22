@@ -4,6 +4,9 @@
 #include "values.h"
 #include "blitz_compat.h"
 #include "texts.h"
+#include "functions.h"
+#include "players.h"
+#include "debug_log.h"
 
 // ---------------------------------------------------------------------------
 //  Scalars
@@ -204,6 +207,7 @@ float skyTR = 0, skyTG = 0, skyTB = 0;
 //  LoadSounds  –  loaded from ux0:data/HardTime/Sound/…
 // ---------------------------------------------------------------------------
 static void LoadSounds() {
+    DebugLog("[SND] LoadSounds() start");
     const std::string S = "ux0:data/HardTime/Sound/";
 
     // Menu sounds
@@ -217,6 +221,7 @@ static void LoadSounds() {
     sComputer   = LoadSound(S + "Computer.wav");
     sCash       = LoadSound(S + "Cash.wav");
     sPaper      = LoadSound(S + "Paper.wav");
+    DebugLog("[SND] Menu sounds loaded");
 
     // Court reactions
     sMurmur     = LoadSound(S + "Murmur.wav");
@@ -282,6 +287,7 @@ static void LoadSounds() {
     sLaser   = Load3DSound(PR + "Laser.wav");
     // sShot loaded in moves.cpp LoadMoveSounds()
     // sRicochet loaded in moves.cpp LoadMoveSounds()
+    DebugLog("[SND] LoadSounds() done");
 }
 
 // ---------------------------------------------------------------------------
@@ -450,21 +456,33 @@ void InitLimbHierarchy() {
 //  InitValues  –  replaces top-level code in Values.bb
 // ---------------------------------------------------------------------------
 void InitValues() {
+    DebugLog("[INIT] InitValues() start");
     // Seed RNG
     SeedRnd(MilliSecs());
 
     // Populate all text strings
+    DebugLog("[INIT] InitTexts()...");
     InitTexts();
+    DebugLog("[INIT] InitTexts() done");
 
     // Initialise camera shortcuts
     for (int i = 1; i <= 9; ++i) camShortcut[i] = i;
     camShortcut[10] = 0;
 
     // Load sound assets
+    DebugLog("[INIT] LoadSounds()...");
     LoadSounds();
+    DebugLog("[INIT] LoadSounds() done");
 
     // Initialise door & cell data
+    DebugLog("[INIT] InitDoorData()...");
     InitDoorData();
+    DebugLog("[INIT] InitDoorData() done");
+    DebugLog("[INIT] InitCellData()...");
     InitCellData();
+    DebugLog("[INIT] InitCellData() done");
+    DebugLog("[INIT] InitLimbHierarchy()...");
     InitLimbHierarchy();
+    DebugLog("[INIT] InitLimbHierarchy() done");
+    DebugLog("[INIT] InitValues() complete");
 }
