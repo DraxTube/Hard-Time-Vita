@@ -313,6 +313,16 @@ int InProximity(int cyc, int v, float range) {
 // ---------------------------------------------------------------------------
 void Loader(const BBString& title, const BBString& message) {
     DebugLog("[LOADER] start: %s | %s", title.c_str(), message.c_str());
+
+    // Set up 2D orthographic projection (required before any GL draw calls)
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, VITA_SCREEN_W, VITA_SCREEN_H, 0, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     DebugLog("[LOADER] glClear done");
