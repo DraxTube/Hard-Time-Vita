@@ -315,6 +315,7 @@ void Loader(const BBString& title, const BBString& message) {
     DebugLog("[LOADER] start: %s | %s", title.c_str(), message.c_str());
 
     // Set up 2D orthographic projection (required before any GL draw calls)
+    vglStartRendering();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, VITA_SCREEN_W, VITA_SCREEN_H, 0, -1, 1);
