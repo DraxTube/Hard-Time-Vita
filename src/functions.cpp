@@ -83,37 +83,52 @@ void OutlineStraight(const BBString& text, int x, int y,
 }
 
 void DrawLine(int x1, int y1, int x2, int y2, int r, int g, int b) {
-    // Draw bold outline in black, then coloured line
+    // Bold outline in black, then coloured line — using vertex arrays
+    float outline[] = {
+        (float)(x1-1),(float)y1, (float)(x2-1),(float)y2,
+        (float)(x1+1),(float)y1, (float)(x2+1),(float)y2,
+        (float)x1,(float)(y1-1), (float)x2,(float)(y2-1),
+        (float)x1,(float)(y1+1), (float)x2,(float)(y2+1),
+    };
     glLineWidth(3.0f);
     glColor3ub(0, 0, 0);
-    glBegin(GL_LINES);
-      glVertex2f(x1-1, y1); glVertex2f(x2-1, y2);
-      glVertex2f(x1+1, y1); glVertex2f(x2+1, y2);
-      glVertex2f(x1, y1-1); glVertex2f(x2, y2-1);
-      glVertex2f(x1, y1+1); glVertex2f(x2, y2+1);
-    glEnd();
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, outline);
+    glDrawArrays(GL_LINES, 0, 8);
+
+    float line[] = { (float)x1,(float)y1, (float)x2,(float)y2 };
     glColor3ub(r, g, b);
-    glBegin(GL_LINES);
-      glVertex2f(x1, y1); glVertex2f(x2, y2);
-    glEnd();
+    glVertexPointer(2, GL_FLOAT, 0, line);
+    glDrawArrays(GL_LINES, 0, 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
     glLineWidth(1.0f);
 }
 
 void DrawRect(int x, int y, int w, int h, bool filled) {
     if (filled) {
-        glBegin(GL_QUADS);
-          glVertex2f(x,   y);
-          glVertex2f(x+w, y);
-          glVertex2f(x+w, y+h);
-          glVertex2f(x,   y+h);
-        glEnd();
+        float verts[] = {
+            (float)x,     (float)y,
+            (float)(x+w), (float)y,
+            (float)(x+w), (float)(y+h),
+            (float)x,     (float)y,
+            (float)(x+w), (float)(y+h),
+            (float)x,     (float)(y+h),
+        };
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, verts);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDisableClientState(GL_VERTEX_ARRAY);
     } else {
-        glBegin(GL_LINE_LOOP);
-          glVertex2f(x,   y);
-          glVertex2f(x+w, y);
-          glVertex2f(x+w, y+h);
-          glVertex2f(x,   y+h);
-        glEnd();
+        float verts[] = {
+            (float)x,     (float)y,
+            (float)(x+w), (float)y,
+            (float)(x+w), (float)(y+h),
+            (float)x,     (float)(y+h),
+        };
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, verts);
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
+        glDisableClientState(GL_VERTEX_ARRAY);
     }
 }
 
@@ -121,13 +136,21 @@ void DrawOval(int x, int y, int w, int h, bool filled) {
     float cx = x + w * 0.5f, cy = y + h * 0.5f;
     float rx = w * 0.5f, ry = h * 0.5f;
     int   segs = 32;
-    glBegin(filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP);
-    if (filled) glVertex2f(cx, cy);
+    // +2 for centre point and closing vertex
+    float verts[(32 + 2) * 2];
+    int vc = 0;
+    if (filled) {
+        verts[vc++] = cx; verts[vc++] = cy;  // centre for fan
+    }
     for (int i = 0; i <= segs; ++i) {
         float a = (float)i / segs * 2.0f * M_PI;
-        glVertex2f(cx + rx * cosf(a), cy + ry * sinf(a));
+        verts[vc++] = cx + rx * cosf(a);
+        verts[vc++] = cy + ry * sinf(a);
     }
-    glEnd();
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(filled ? GL_TRIANGLE_FAN : GL_LINE_LOOP, 0, vc / 2);
+    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 // ---------------------------------------------------------------------------
