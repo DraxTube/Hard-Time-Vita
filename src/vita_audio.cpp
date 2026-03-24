@@ -105,18 +105,21 @@ void VitaAudioEngine::shutdown() {
 }
 
 VitaSound* VitaAudioEngine::load(const char* path) {
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] load start: %s\n", path); fflush(g_debugLog); }
     auto* s = new VitaSound();
     SceUID fd = sceIoOpen(path, SCE_O_RDONLY, 0);
     if (fd < 0) {
         if (g_debugLog) { fprintf(g_debugLog, "[AUD] open FAIL: %s\n", path); fflush(g_debugLog); }
         return s;
     }
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] opened fd=%d: %s\n", fd, path); fflush(g_debugLog); }
     long sz = sceIoLseek(fd, 0, SCE_SEEK_END);
-    if (sz <= 0 || sz > 10*1024*1024) {  // reject files > 10MB or invalid size
+    if (sz <= 0 || sz > 10*1024*1024) {
         if (g_debugLog) { fprintf(g_debugLog, "[AUD] bad size %ld: %s\n", sz, path); fflush(g_debugLog); }
         sceIoClose(fd);
         return s;
     }
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] size=%ld: %s\n", sz, path); fflush(g_debugLog); }
     sceIoLseek(fd, 0, SCE_SEEK_SET);
     uint8_t* raw = (uint8_t*)malloc(sz);
     if (!raw) {
@@ -124,34 +127,43 @@ VitaSound* VitaAudioEngine::load(const char* path) {
         sceIoClose(fd);
         return s;
     }
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] malloc OK, reading %ld bytes: %s\n", sz, path); fflush(g_debugLog); }
     sceIoRead(fd, raw, sz);
     sceIoClose(fd);
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] read+close done: %s\n", path); fflush(g_debugLog); }
     if (sz >= 44 && memcmp(raw,"RIFF",4)==0 && memcmp(raw+8,"WAVE",4)==0) {
+        if (g_debugLog) { fprintf(g_debugLog, "[AUD] RIFF/WAVE header OK: %s\n", path); fflush(g_debugLog); }
         int off = 12;
         while (off + 8 < sz) {
             uint32_t clen = *(uint32_t*)(raw+off+4);
-            if (clen > (uint32_t)(sz - off - 8)) clen = sz - off - 8;  // clamp to avoid overflow
+            if (clen > (uint32_t)(sz - off - 8)) clen = sz - off - 8;
             if (memcmp(raw+off,"fmt ",4)==0 && clen >= 16) {
                 s->channels    = *(uint16_t*)(raw+off+10);
                 s->sample_rate = *(uint32_t*)(raw+off+12);
+                if (g_debugLog) { fprintf(g_debugLog, "[AUD] fmt: ch=%d rate=%d: %s\n", s->channels, s->sample_rate, path); fflush(g_debugLog); }
             } else if (memcmp(raw+off,"data",4)==0) {
                 int n = clen / 2;
+                if (g_debugLog) { fprintf(g_debugLog, "[AUD] data chunk: clen=%u n=%d: %s\n", clen, n, path); fflush(g_debugLog); }
                 if (n > 0) {
                     s->samples   = new(std::nothrow) int16_t[n];
                     if (s->samples) {
                         s->n_samples = n;
                         memcpy(s->samples, raw+off+8, clen);
                         s->loaded = true;
+                    } else {
+                        if (g_debugLog) { fprintf(g_debugLog, "[AUD] sample alloc FAIL n=%d: %s\n", n, path); fflush(g_debugLog); }
                     }
                 }
                 break;
             }
             off += 8 + clen;
-            if (off < 0) break;  // overflow protection
+            if (off < 0) break;
         }
+    } else {
+        if (g_debugLog) { fprintf(g_debugLog, "[AUD] not RIFF/WAVE: %s\n", path); fflush(g_debugLog); }
     }
     free(raw);
-    if (g_debugLog) { fprintf(g_debugLog, "[AUD] load %s: sz=%ld loaded=%d\n", path, sz, s->loaded); fflush(g_debugLog); }
+    if (g_debugLog) { fprintf(g_debugLog, "[AUD] load done %s: sz=%ld loaded=%d\n", path, sz, s->loaded); fflush(g_debugLog); }
     return s;
 }
 
