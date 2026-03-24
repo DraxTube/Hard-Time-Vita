@@ -2,6 +2,7 @@
 //  functions.cpp  –  Universal helper functions  (converted from Functions.bb)
 // =============================================================================
 #include "functions.h"
+#include "debug_log.h"
 #include "values.h"
 #include "players.h"
 #include "costume.h"
@@ -311,29 +312,36 @@ int InProximity(int cyc, int v, float range) {
 //  Loader screen
 // ---------------------------------------------------------------------------
 void Loader(const BBString& title, const BBString& message) {
-    // Clear screen and draw simple loading text
+    DebugLog("[LOADER] start: %s | %s", title.c_str(), message.c_str());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    DebugLog("[LOADER] glClear done");
 
     SetColor(255, 255, 255);
+    DebugLog("[LOADER] SetColor done");
     DrawText(title,   VITA_SCREEN_W / 2, VITA_SCREEN_H / 2 - 20, true, true);
+    DebugLog("[LOADER] DrawText title done");
     DrawText(message, VITA_SCREEN_W / 2, VITA_SCREEN_H / 2 + 20, true, true);
+    DebugLog("[LOADER] DrawText message done");
 
     vglSwapBuffers(GL_FALSE);
+    DebugLog("[LOADER] vglSwapBuffers done");
 }
 
 // ---------------------------------------------------------------------------
 //  Intro
 // ---------------------------------------------------------------------------
 void Intro() {
-    // Display logo for ~2 seconds then proceed
+    DebugLog("[INTRO] start");
     Loader("HARD TIME", "© Mat Dickie 2007  |  PS Vita Port");
+    DebugLog("[INTRO] Loader done, waiting 2s");
     int start = MilliSecs();
     while (MilliSecs() - start < 2000) {
         gInput.Update();
         if (gInput.Pressed(SCE_CTRL_CROSS) ||
             gInput.Pressed(SCE_CTRL_START)) break;
     }
+    DebugLog("[INTRO] done");
 }
 
 // ---------------------------------------------------------------------------
