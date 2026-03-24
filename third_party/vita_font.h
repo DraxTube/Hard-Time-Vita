@@ -166,28 +166,34 @@ static void draw_text(const std::string& str, int x, int y,
     int oy  = centreV ? y - CHAR_H / 2       : y;
 
     glColor3f(s_r, s_g, s_b);
-    glBegin(GL_QUADS);
-    for (int i = 0; i < len; ++i) {
-        int ch = (unsigned char)str[i];
-        if (ch < 0 || ch > 127) ch = '?';
-        const uint8_t* glyph = FONT_DATA[ch];
-        int cx = ox + i * CHAR_W;
-        for (int row = 0; row < CHAR_H; ++row) {
-            uint8_t bits = glyph[row];
-            if (!bits) continue;
-            for (int col = 0; col < CHAR_W; ++col) {
-                if (bits & (0x80 >> col)) {
-                    float px = (float)(cx + col);
-                    float py = (float)(oy + row);
-                    glVertex2f(px,       py);
-                    glVertex2f(px + 1.f, py);
-                    glVertex2f(px + 1.f, py + 1.f);
-                    glVertex2f(px,       py + 1.f);
+    // Batch-split: flush every BATCH_SIZE chars to avoid overflowing
+    // vitaGL's limited immediate-mode vertex buffer.
+    static constexpr int BATCH_SIZE = 4;
+    for (int i = 0; i < len; i += BATCH_SIZE) {
+        int end = (i + BATCH_SIZE < len) ? i + BATCH_SIZE : len;
+        glBegin(GL_QUADS);
+        for (int j = i; j < end; ++j) {
+            int ch = (unsigned char)str[j];
+            if (ch < 0 || ch > 127) ch = '?';
+            const uint8_t* glyph = FONT_DATA[ch];
+            int cx = ox + j * CHAR_W;
+            for (int row = 0; row < CHAR_H; ++row) {
+                uint8_t bits = glyph[row];
+                if (!bits) continue;
+                for (int col = 0; col < CHAR_W; ++col) {
+                    if (bits & (0x80 >> col)) {
+                        float px = (float)(cx + col);
+                        float py = (float)(oy + row);
+                        glVertex2f(px,       py);
+                        glVertex2f(px + 1.f, py);
+                        glVertex2f(px + 1.f, py + 1.f);
+                        glVertex2f(px,       py + 1.f);
+                    }
                 }
             }
         }
+        glEnd();
     }
-    glEnd();
 }
 
 static int text_width(const std::string& s)  { return (int)s.size() * CHAR_W; }
