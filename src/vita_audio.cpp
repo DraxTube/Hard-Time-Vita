@@ -148,7 +148,7 @@ VitaSound* VitaAudioEngine::load(const char* path) {
                     s->samples   = new(std::nothrow) int16_t[n];
                     if (s->samples) {
                         s->n_samples = n;
-                        memcpy(s->samples, raw+off+8, clen);
+                        memcpy(s->samples, raw+off+8, n * 2);
                         s->loaded = true;
                     } else {
                         if (g_debugLog) { fprintf(g_debugLog, "[AUD] sample alloc FAIL n=%d: %s\n", n, path); fflush(g_debugLog); }
