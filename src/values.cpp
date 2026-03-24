@@ -268,7 +268,7 @@ static void LoadSounds() {
     sMetal   = Load3DSound(PR + "Metal.wav");
     sWood    = Load3DSound(PR + "Wood.wav");
     sCane    = Load3DSound(PR + "Cane.wav");
-    sString  = Load3DSound(PR + "String.wav");
+    // sString not loaded – file does not exist in original game data
     sRock    = Load3DSound(PR + "Rock.wav");
     sAxe     = Load3DSound(PR + "Axe.wav");
     sBall    = Load3DSound(PR + "Ball.wav");
