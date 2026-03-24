@@ -314,8 +314,7 @@ int InProximity(int cyc, int v, float range) {
 void Loader(const BBString& title, const BBString& message) {
     DebugLog("[LOADER] start: %s | %s", title.c_str(), message.c_str());
 
-    // Set up 2D orthographic projection (required before any GL draw calls)
-    vglStartRendering();
+    // Set up 2D orthographic projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, VITA_SCREEN_W, VITA_SCREEN_H, 0, -1, 1);
@@ -323,11 +322,25 @@ void Loader(const BBString& title, const BBString& message) {
     glLoadIdentity();
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_TEXTURE_2D);
+    DebugLog("[LOADER] GL setup done");
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     DebugLog("[LOADER] glClear done");
 
+    // Draw a simple test quad (white rectangle in center)
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    DebugLog("[LOADER] glColor4f done");
+    glBegin(GL_QUADS);
+    DebugLog("[LOADER] glBegin done");
+    glVertex2f(380, 250);
+    glVertex2f(580, 250);
+    glVertex2f(580, 294);
+    glVertex2f(380, 294);
+    glEnd();
+    DebugLog("[LOADER] test quad done");
+
+    // Now try text
     SetColor(255, 255, 255);
     DebugLog("[LOADER] SetColor done");
     DrawText(title,   VITA_SCREEN_W / 2, VITA_SCREEN_H / 2 - 20, true, true);
