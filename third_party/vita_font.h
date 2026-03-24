@@ -156,33 +156,38 @@ static float s_r=1,s_g=1,s_b=1;
 
 static inline void set_color(float r, float g, float b) { s_r=r; s_g=g; s_b=b; }
 
-static void draw_char(int cx, int cy, int ch) {
-    if (ch < 0 || ch > 127) ch = '?';
-    const uint8_t* glyph = FONT_DATA[ch];
-    for (int row = 0; row < CHAR_H; ++row) {
-        uint8_t bits = glyph[row];
-        if (!bits) continue;
-        for (int col = 0; col < CHAR_W; ++col) {
-            if (bits & (0x80 >> col)) {
-                float x0 = cx + col;
-                float y0 = cy + row;
-                glColor3f(s_r, s_g, s_b);
-                glBegin(GL_POINTS);
-                glVertex2f(x0 + 0.5f, y0 + 0.5f);
-                glEnd();
-            }
-        }
-    }
-}
-
 // Draw a string. centreH/centreV center the text around (x,y)
+// All pixels are batched into a single GL_QUADS draw call.
 static void draw_text(const std::string& str, int x, int y,
                       bool centreH=false, bool centreV=false) {
     int len = (int)str.size();
+    if (len == 0) return;
     int ox  = centreH ? x - len * CHAR_W / 2 : x;
     int oy  = centreV ? y - CHAR_H / 2       : y;
-    for (int i = 0; i < len; ++i)
-        draw_char(ox + i * CHAR_W, oy, (unsigned char)str[i]);
+
+    glColor3f(s_r, s_g, s_b);
+    glBegin(GL_QUADS);
+    for (int i = 0; i < len; ++i) {
+        int ch = (unsigned char)str[i];
+        if (ch < 0 || ch > 127) ch = '?';
+        const uint8_t* glyph = FONT_DATA[ch];
+        int cx = ox + i * CHAR_W;
+        for (int row = 0; row < CHAR_H; ++row) {
+            uint8_t bits = glyph[row];
+            if (!bits) continue;
+            for (int col = 0; col < CHAR_W; ++col) {
+                if (bits & (0x80 >> col)) {
+                    float px = (float)(cx + col);
+                    float py = (float)(oy + row);
+                    glVertex2f(px,       py);
+                    glVertex2f(px + 1.f, py);
+                    glVertex2f(px + 1.f, py + 1.f);
+                    glVertex2f(px,       py + 1.f);
+                }
+            }
+        }
+    }
+    glEnd();
 }
 
 static int text_width(const std::string& s)  { return (int)s.size() * CHAR_W; }
