@@ -41,12 +41,18 @@ void DrawFade() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColor4f(0.0f, 0.0f, 0.0f, fadeAlpha);
-    glBegin(GL_QUADS);
-        glVertex2f(0,                0);
-        glVertex2f(VITA_SCREEN_W,    0);
-        glVertex2f(VITA_SCREEN_W,    VITA_SCREEN_H);
-        glVertex2f(0,                VITA_SCREEN_H);
-    glEnd();
+    float verts[] = {
+        0,              0,
+        VITA_SCREEN_W,  0,
+        VITA_SCREEN_W,  VITA_SCREEN_H,
+        0,              0,
+        VITA_SCREEN_W,  VITA_SCREEN_H,
+        0,              VITA_SCREEN_H,
+    };
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2, GL_FLOAT, 0, verts);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glColor4f(1,1,1,1);
