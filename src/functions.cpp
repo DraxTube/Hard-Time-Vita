@@ -328,26 +328,17 @@ void Loader(const BBString& title, const BBString& message) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     DebugLog("[LOADER] glClear done");
 
-    // Draw a simple test quad (white rectangle in center)
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    DebugLog("[LOADER] glColor4f done");
-    glBegin(GL_QUADS);
-    DebugLog("[LOADER] glBegin done");
-    glVertex2f(380, 250);
-    glVertex2f(580, 250);
-    glVertex2f(580, 294);
-    glVertex2f(380, 294);
-    glEnd();
-    DebugLog("[LOADER] test quad done");
-
-    // Now try text
+    // Draw text
     SetColor(255, 255, 255);
-    DebugLog("[LOADER] SetColor done");
+    DebugLog("[LOADER] about to DrawText title (%d chars)", (int)title.size());
     DrawText(title,   VITA_SCREEN_W / 2, VITA_SCREEN_H / 2 - 20, true, true);
     DebugLog("[LOADER] DrawText title done");
+    DebugLog("[LOADER] about to DrawText message (%d chars)", (int)message.size());
     DrawText(message, VITA_SCREEN_W / 2, VITA_SCREEN_H / 2 + 20, true, true);
     DebugLog("[LOADER] DrawText message done");
 
+    glFinish();  // Force GPU to complete before swap
+    DebugLog("[LOADER] glFinish done");
     vglSwapBuffers(GL_FALSE);
     DebugLog("[LOADER] vglSwapBuffers done");
 }
@@ -379,38 +370,47 @@ void LoadImages() {
 }
 
 void LoadTextures() {
+    DebugLog("[TEXLOAD] LoadTextures() start");
     const std::string BASE = "ux0:data/HardTime/";
 
     // Signs (World/Signs/Sign01-11.PNG)
+    DebugLog("[TEXLOAD] Loading signs...");
     for (int i = 1; i <= 11; ++i)
         tSign[i] = (GLuint)LoadTexture(BASE + "World/Signs/Sign" + Dig(i,10) + ".PNG");
 
     // Block number plates (Characters/Numbers/Block01-04.PNG)
+    DebugLog("[TEXLOAD] Loading blocks...");
     for (int i = 1; i <= 4; ++i)
         tBlock[i] = (GLuint)LoadTexture(BASE + "Characters/Numbers/Block" + Dig(i,10) + ".PNG");
 
     // Cell number plates (Characters/Numbers/Cell01-20.PNG)
+    DebugLog("[TEXLOAD] Loading cells...");
     for (int i = 1; i <= 20; ++i)
         tCell[i] = (GLuint)LoadTexture(BASE + "Characters/Numbers/Cell" + Dig(i,10) + ".PNG");
 
     // Video screens (World/Screens/Screen00-10.JPG)
+    DebugLog("[TEXLOAD] Loading screens...");
     for (int i = 0; i <= 10; ++i)
         tScreen[i] = (GLuint)LoadTexture(BASE + "World/Screens/Screen" + Dig(i,10) + ".JPG");
 
     // Food trays (World/Sprites/Tray00-07.JPG)
+    DebugLog("[TEXLOAD] Loading trays...");
     for (int i = 0; i <= 7; ++i)
         tTray[i] = (GLuint)LoadTexture(BASE + "World/Sprites/Tray" + Dig(i,10) + ".JPG");
 
     // World sprites
+    DebugLog("[TEXLOAD] Loading world sprites...");
     tFence  = (GLuint)LoadTexture(BASE + "World/Sprites/Fence.PNG");
     tNet    = (GLuint)LoadTexture(BASE + "World/Sprites/Net.PNG");
     tShower = (GLuint)LoadTexture(BASE + "World/Sprites/Shower.PNG");
 
     // Weapon textures (Weapons/Textures/Machine.PNG, Pistol.PNG)
+    DebugLog("[TEXLOAD] Loading weapon textures...");
     tMachine = (GLuint)LoadTexture(BASE + "Weapons/Textures/Machine.PNG");
     tPistol  = (GLuint)LoadTexture(BASE + "Weapons/Textures/Pistol.PNG");
 
     // Facial expressions (Characters/Expressions/)
+    DebugLog("[TEXLOAD] Loading expressions...");
     tEars = (GLuint)LoadTexture(BASE + "Characters/Expressions/Ears.JPG");
     for (int i = 1; i <= 3; ++i)
         tEyes[i] = (GLuint)LoadTexture(BASE + "Characters/Expressions/Eyes0" + std::to_string(i) + ".JPG");
@@ -418,37 +418,45 @@ void LoadTextures() {
         tMouth[i] = (GLuint)LoadTexture(BASE + "Characters/Expressions/Mouth0" + std::to_string(i) + ".JPG");
 
     // Costume variations
+    DebugLog("[TEXLOAD] Loading costumes...");
     tShaved = (GLuint)LoadTexture(BASE + "Characters/Hair/Shaved.JPG");
     for (int i = 1; i <= 3; ++i)
         tSpecs[i] = (GLuint)LoadTexture(BASE + "Characters/Specs/Specs" + Dig(i,10) + ".JPG");
 
     // Hair (Characters/Hair/Hair01-09.PNG — uses dynamic count)
+    DebugLog("[TEXLOAD] Loading hair (count=%d)...", no_hairs);
     for (int i = 1; i <= no_hairs; ++i)
         tHair[i] = (GLuint)LoadTexture(BASE + "Characters/Hair/Hair" + Dig(i,10) + ".PNG");
 
     // Faces (Characters/Faces/Face01-66.JPG)
+    DebugLog("[TEXLOAD] Loading faces (count=%d)...", no_faces);
     for (int i = 1; i <= no_faces; ++i)
         tFace[i] = (GLuint)LoadTexture(BASE + "Characters/Faces/Face" + Dig(i,10) + ".JPG");
 
     // Bodies (Characters/Bodies/Body01-10.JPG)
+    DebugLog("[TEXLOAD] Loading bodies (count=%d)...", no_bodies);
     for (int i = 1; i <= no_bodies; ++i)
         tBody[i] = (GLuint)LoadTexture(BASE + "Characters/Bodies/Body" + Dig(i,10) + ".JPG");
 
     // Arms (Characters/Arms/Arm01-12.JPG)
+    DebugLog("[TEXLOAD] Loading arms (count=%d)...", no_arms);
     for (int i = 1; i <= no_arms; ++i)
         tArm[i] = (GLuint)LoadTexture(BASE + "Characters/Arms/Arm" + Dig(i,10) + ".JPG");
 
     // Legs (Characters/Legs/Legs01-06.JPG)
+    DebugLog("[TEXLOAD] Loading legs (count=%d)...", no_legs);
     for (int i = 1; i <= no_legs; ++i)
         tLegs[i] = (GLuint)LoadTexture(BASE + "Characters/Legs/Legs" + Dig(i,10) + ".JPG");
 
     // Racial shading (Characters/Shading/Body01-04.PNG, Arm01-08.PNG)
+    DebugLog("[TEXLOAD] Loading shading...");
     for (int i = 1; i <= 4; ++i)
         tBodyShade[i] = (GLuint)LoadTexture(BASE + "Characters/Shading/Body" + Dig(i,10) + ".PNG");
     for (int i = 1; i <= 8; ++i)
         tArmShade[i] = (GLuint)LoadTexture(BASE + "Characters/Shading/Arm" + Dig(i,10) + ".PNG");
 
     // Scarring (Characters/Scarring/)
+    DebugLog("[TEXLOAD] Loading scarring...");
     for (int i = 0; i <= 4; ++i)
         tFaceScar[i] = (GLuint)LoadTexture(BASE + "Characters/Scarring/Face" + Dig(i,10) + ".JPG");
     for (int i = 0; i <= 4; ++i)
@@ -459,6 +467,7 @@ void LoadTextures() {
         tLegScar[i] = (GLuint)LoadTexture(BASE + "Characters/Scarring/Legs" + Dig(i,10) + ".JPG");
 
     // Wounds (Characters/Scarring/Wounds/)
+    DebugLog("[TEXLOAD] Loading wounds...");
     tSeverEars = (GLuint)LoadTexture(BASE + "Characters/Scarring/Wounds/Ears.JPG");
     for (int i = 1; i <= 3; ++i)
         tSeverBody[i] = (GLuint)LoadTexture(BASE + "Characters/Scarring/Wounds/Body" + Dig(i,10) + ".JPG");
@@ -468,6 +477,7 @@ void LoadTextures() {
         tSeverLegs[i] = (GLuint)LoadTexture(BASE + "Characters/Scarring/Wounds/Legs" + Dig(i,10) + ".JPG");
 
     // Tattoos (Characters/Tattoos/)
+    DebugLog("[TEXLOAD] Loading tattoos...");
     for (int i = 1; i <= 6; ++i) {
         tTattooBody[i]   = (GLuint)LoadTexture(BASE + "Characters/Tattoos/Body" + Dig(i,10) + ".JPG");
         tTattooVest[i]   = (GLuint)LoadTexture(BASE + "Characters/Tattoos/Vest" + Dig(i,10) + ".JPG");
@@ -475,4 +485,5 @@ void LoadTextures() {
         tTattooTee[i]    = (GLuint)LoadTexture(BASE + "Characters/Tattoos/Tee" + Dig(i,10) + ".JPG");
         tTattooSleeve[i] = (GLuint)LoadTexture(BASE + "Characters/Tattoos/Sleeve" + Dig(i,10) + ".JPG");
     }
+    DebugLog("[TEXLOAD] LoadTextures() complete");
 }
